@@ -23,6 +23,10 @@ def init_curses():
     return screen
 
 def terminate_curses(screen, return_screen_content:bool = False) -> str:
+    """
+    :param return_screen_content: return behavior
+    :return: full screen content or empty string
+    """
     screen_content = ""
     if return_screen_content:
         for each_line in range(0, curses.LINES):
@@ -73,6 +77,7 @@ screen.refresh()
 class AgendaItem:
     def __init__(self, name:str, duration:int):
         self.name = name
+        self._init_duration: int = duration
         self.duration = duration
         self.elapsed = 0
 
@@ -82,10 +87,22 @@ class AgendaItem:
         return self.duration
     
     def drain(self) -> int:
-        self.elapsed = self.elapsed + self.duration
+        """
+        reset counter
+        :return: how many seconds were reseted 
+        """
+        self.elapsed = self.elapsed
         return_value = self.duration
         self.duration = 0 
         return return_value
+    
+    def restore(self) -> int:
+        """
+        restore reseted value
+        :return: how many seconds will be borrowed
+        """
+        self.duration = self._init_duration-self.elapsed
+        return self.duration 
 
     def __str__(self):
         return f'{self.name} {self.duration} {self.elapsed}'
@@ -219,7 +236,7 @@ def print_current_time(screen, index: int, name_length:int, start_time_in_sec: i
                   curses.color_pair(color_pair))
     
 
-def draw_agenda(agenda: List[AgendaItem], full_time_sec: int) -> None:
+def draw_agenda(agenda: List[AgendaItem], full_time_sec: int) -> str:
     try:
         start_time_in_sec:int = get_current_time_in_seconds()
         spare_time:int = full_time_sec - sum([each_agenda.duration for each_agenda in agenda]) if full_time_sec > 0 else 0
@@ -254,6 +271,7 @@ def draw_agenda(agenda: List[AgendaItem], full_time_sec: int) -> None:
                 if mode_todo:
                     if todo_index > 0:
                         todo_index -= 1
+                        spare_time -= agenda[todo_index].restore()
 
             if typed_char == ord('n'):  
                 # next agenda
@@ -289,18 +307,19 @@ def draw_agenda(agenda: List[AgendaItem], full_time_sec: int) -> None:
     except BaseException as e:
         print(f"exception: {e}")
     finally:
-        terminate_curses(screen, True)
+        return terminate_curses(screen, True)
 
 
 def main(arguments: List[str]) -> None:
     agenda:List[AgendaItem] = read_agenda(arguments)
     full_time_sec = read_time(arguments)
-    draw_agenda(agenda, full_time_sec)
+    screen_content = draw_agenda(agenda, full_time_sec)
+    filename = f"out_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
+    with open(filename, "w") as f:
+        f.write(screen_content)
 
     
 if __name__=='__main__':    
-    arguments = sys.argv[1:] if len(sys.argv) > 1 else []
-    main(arguments)
-
+    main(sys.argv[1:] if len(sys.argv) > 1 else [])
     # screen.refresh()
     curses.endwin()
