@@ -58,6 +58,8 @@ you will find the snapshot of the last screen
 in "out_yyyyMMddHHmmss.txt" file 
 
 ### Screenshot
+![image](https://github.com/user-attachments/assets/aabfac44-4481-4889-9219-68b3785808de)
+
 current mode - ToDo
 1. finished point
 2. currently active part of the meeting
