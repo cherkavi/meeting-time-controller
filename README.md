@@ -19,13 +19,19 @@ python3 time-controller.py
 
 * with specific agenda file 
 ```sh
-python3 time-controller.py /home/temp/my-agenda.csv
+python3 time-controller.py agenda.csv
 ```
 
-* with specific agenda file and additional amount of minutes as a "spare time"
+* with specific agenda file and full amount of minutes for the session
 ```sh
-python3 time-controller.py /home/temp/my-agenda.csv 3
+python3 time-controller.py agenda.csv 10
 ```
+
+* with specific agenda file and upcoming finish time 
+```sh
+python3 time-controller.py 22:40
+```
+
 
 ## Application
 ### Modes
@@ -44,8 +50,19 @@ there are two possible modes of the working application:
 * csv file where each line has name of the point and amount of minutes for it in your agenda  
   just specify the name of the file in any position as an input argument 
 * int number in any position of an input argument as an initial amount of Spare minutes
+* upcoming time in format "11:00" or "13:30" or "17:10" in any position 
 
 ### Output
 after quit from the application  
 you will find the snapshot of the last screen  
 in "out_yyyyMMddHHmmss.txt" file 
+
+### Screenshot
+current mode - ToDo
+1. finished point
+2. currently active part of the meeting
+3. upcoming chapter
+4. current spare time is negative - need to speed up to catch the deadline (7)
+5. start time
+6. current time
+7. end time

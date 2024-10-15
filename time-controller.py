@@ -5,6 +5,7 @@ import time
 from typing import List
 import sys
 import datetime
+import re
 
 DEFAULT_FILE:str = 'agenda.csv'
 LENGTH_NUMBER:int = 2
@@ -30,7 +31,7 @@ def terminate_curses(screen, return_screen_content:bool = False) -> str:
     screen_content = ""
     if return_screen_content:
         for each_line in range(0, curses.LINES):
-            screen_content = screen_content + "\n" + screen.instr(each_line, 0, curses.COLS).decode('utf-8')        
+            screen_content = screen_content + screen.instr(each_line, 0, curses.COLS).decode('utf-8').rstrip()+"\n"
     curses.nocbreak()
     screen.keypad(False)
     curses.echo()
@@ -125,18 +126,42 @@ def read_agenda_from_file(file_path: str) -> List[AgendaItem]:
 
 def read_agenda(file_paths: List[str]) -> List[AgendaItem]:
     # Use provided file paths if any, otherwise use default file
-    files_to_check: List[str] = file_paths if file_paths else [DEFAULT_FILE]
+    files_to_check: List[str] = file_paths.copy() if file_paths else [DEFAULT_FILE]
+    files_to_check.append(DEFAULT_FILE)
 
     for file_path in files_to_check:
+        if file_path.isnumeric():
+            continue
+        if len(file_path)<=5 and file_path.find(":")>0:
+            continue
         if os.path.isfile(file_path):
             return read_agenda_from_file(file_path)
     
     sys.exit(f'No agenda file found in {files_to_check}')
 
+
+time_pattern = r"(\d{1,2}):(\d{2})"
+
 def read_time(arguments: List[str]) -> int:
+    # attempt to read amount of minutes for the session 
     for each_argument in arguments:
         if each_argument.isnumeric():
             return int(each_argument)*60
+    
+    # attempt to read time 
+    for each_argument in arguments:
+        match = re.search(time_pattern, each_argument)
+        if match:
+            hours = match.group(1)
+            minutes = match.group(2)            
+
+            current_time = datetime.datetime.now()
+            try:            
+                parsed_time = datetime.datetime.strptime(f"{hours}:{minutes}", "%H:%M").replace(year=current_time.year, month=current_time.month, day=current_time.day)
+            except:
+                continue
+
+            return int((parsed_time - current_time).total_seconds())
     return 0
 
 def sec_to_time(value: int) -> str:
